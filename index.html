@@ -4,36 +4,471 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heavy | VEX V5 Weight Calculator</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="main.js" defer></script>
+    <style>
+        :root {
+            --primary: #e84c3d;
+            --primary-dark: #c0392b;
+            --secondary: #f39c12;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --card-bg: white;
+            --text: #2c3e50;
+            --border: #edf2f7;
+            --component-bg: #f9fafb;
+            --component-hover: #edf2f7;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+            --transition: all 0.25s ease;
+        }
+        
+        [data-theme="dark"] {
+            --primary: #e84c3d;
+            --primary-dark: #c0392b;
+            --secondary: #f39c12;
+            --dark: #1a202c;
+            --light: #121212;
+            --card-bg: #1e2430;
+            --text: #e2e8f0;
+            --border: #2d3748;
+            --component-bg: #2d3748;
+            --component-hover: #3a4a5e;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        [data-theme="blue"] {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+        }
+        
+        [data-theme="green"] {
+            --primary: #2ecc71;
+            --primary-dark: #27ae60;
+        }
+        
+        [data-theme="gold"] {
+            --primary: #f1c40f;
+            --primary-dark: #d4ac0d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 24px 0;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        
+        header h2 {
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        .calculator {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .components {
+            flex: 3;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            color: var(--text);
+            transition: var(--transition);
+        }
+        
+        .summary {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+            color: var(--text);
+            transition: var(--transition);
+            min-width: 280px;
+        }
+        
+        .component-category {
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+        }
+        
+        .component-category h2 {
+            margin-bottom: 18px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+        
+        .component-category h2::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+            margin-left: 15px;
+        }
+        
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .component-item {
+            display: flex;
+            align-items: center;
+            background: var(--component-bg);
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+        
+        .component-item:hover {
+            background: var(--component-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .component-item input[type="number"] {
+            margin-right: 12px;
+            width: 50px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) / 2);
+            padding: 6px;
+            background-color: var(--card-bg);
+            color: var(--text);
+            font-weight: 600;
+        }
+        
+        .component-item label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .component-item span {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        .metal-config {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            margin-left: 62px;
+            font-size: 0.9rem;
+        }
+        
+        .metal-config input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+        }
+        
+        .metal-config input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+        
+        .weight-box {
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+        
+        .weight-box h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+        
+        .weight-box .weight {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+        
+        .weight-box .unit {
+            font-size: 1rem;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        .selected-items {
+            margin-top: 24px;
+        }
+        
+        .selected-items h3 {
+            margin-bottom: 14px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .selected-items ul {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .selected-items li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .selected-items .count {
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        
+        button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+        
+        button.reset {
+            width: 100%;
+            margin-top: 20px;
+            background: var(--primary-dark);
+        }
+        
+        .settings-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            padding: 0;
+        }
+        
+        .settings-popup {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            z-index: 99;
+            transform: translateY(20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        
+        .settings-popup.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .settings-popup h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .theme-option {
+            margin-bottom: 20px;
+        }
+        
+        .theme-option h4 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .color-option.active {
+            transform: scale(1.1);
+            border-color: var(--text);
+        }
+        
+        .color-red { background-color: #e84c3d; }
+        .color-blue { background-color: #3498db; }
+        .color-green { background-color: #2ecc71; }
+        .color-gold { background-color: #f1c40f; }
+        
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .calculator {
+                flex-direction: column;
+            }
+            
+            .summary {
+                position: static;
+                order: -1;
+            }
+            
+            .component-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body data-theme="default">
     <header>
         <div class="container">
             <h1>Heavy</h1>
-            <h2><i>VEX V5 Weight Calculator</i></h2>
+            <h2>VEX V5 Weight Calculator</h2>
         </div>
     </header>
     
     <div class="container">
-        <div class="theme-controls">
-            <div class="theme-label">
-                <span>Dark Mode</span>
-                <label class="switch">
-                    <input type="checkbox" id="theme-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div>
-                <span>Color Theme:</span>
-                <button class="theme-btn" data-theme="default"><span class="color-dot dot-red"></span> Red</button>
-                <button class="theme-btn" data-theme="blue"><span class="color-dot dot-blue"></span> Blue</button>
-                <button class="theme-btn" data-theme="green"><span class="color-dot dot-green"></span> Green</button>
-                <button class="theme-btn" data-theme="purple"><span class="color-dot dot-purple"></span> Purple</button>
-            </div>
-        </div>
-        
         <div class="calculator">
             <div class="components">
                 <div class="component-category">
@@ -99,265 +534,9 @@
                                 </label>
                             </div>
                         </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="steel-plate-count" min="0" value="0">
-                            <label for="steel-plate-count">Steel 5-hole Plate</label>
-                            <span>12.06g</span>
-                        </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="steel-1x-count" min="0" value="0">
-                            <label for="steel-1x-count">Steel 1x Plate</label>
-                            <span>2.45g/in</span>
-                            <div class="metal-config">
-                                <input type="number" id="steel-1x-length" min="1" value="35" step="0.5"> inches
-                                <label>
-                                    <input type="checkbox" id="steel-1x-half"> Half cut
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="steel-2x1-count" min="0" value="0">
-                            <label for="steel-2x1-count">Steel 2x1 C Channel</label>
-                            <span>7.13g/in</span>
-                            <div class="metal-config">
-                                <input type="number" id="steel-2x1-length" min="1" value="35" step="0.5"> inches
-                                <label>
-                                    <input type="checkbox" id="steel-2x1-half"> Half cut
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="channel-couple-count" min="0" value="0">
-                            <label for="channel-couple-count">Channel Coupler</label>
-                            <span>7.7g</span>
-                        </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="large-slide-count" min="0" value="0">
-                            <label for="large-slide-count">Large Slide Rail</label>
-                            <span>7.74g/in</span>
-                            <div class="metal-config">
-                                <input type="number" id="large-slide-length" min="1" value="35" step="0.5"> inches
-                                <label>
-                                    <input type="checkbox" id="large-slide-half"> Half cut
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="small-slide-count" min="0" value="0">
-                            <label for="small-slide-count">Small Slide Rail</label>
-                            <span>7.13g/in</span>
-                            <div class="metal-config">
-                                <input type="number" id="small-slide-length" min="1" value="35" step="0.5"> inches
-                                <label>
-                                    <input type="checkbox" id="small-slide-half"> Half cut
-                                </label>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 
-                <div class="component-category">
-                    <h2>Shafts</h2>
-                    <div class="component-grid">
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="ls-shaft-count" min="0" value="0">
-                            <label for="ls-shaft-count">Low Strength Shaft</label>
-                            <span>2g/in</span>
-                            <div class="metal-config">
-                                <input type="number" id="ls-shaft-length" min="1" value="12" step="0.5"> inches
-                            </div>
-                        </div>
-                        
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="hs-shaft-count" min="0" value="0">
-                            <label for="hs-shaft-count">High Strength Shaft</label>
-                            <span>7.5g/in</span>
-                            <div class="metal-config">
-                                <input type="number" id="hs-shaft-length" min="1" value="12" step="0.5"> inches
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="component-category">
-                    <h2>Nuts</h2>
-                    <div class="component-grid">
-                        <div class="component-item">
-                            <input type="number" id="lock-nut" min="0" value="0">
-                            <label for="lock-nut">Lock Nut</label>
-                            <span>1.8g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="thin-lock-nut" min="0" value="0">
-                            <label for="thin-lock-nut">Thin Lock Nut</label>
-                            <span>1.3g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="keps-nut" min="0" value="0">
-                            <label for="keps-nut">Keps Nut</label>
-                            <span>1.3g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="hex-nut" min="0" value="0">
-                            <label for="hex-nut">Hex Nut</label>
-                            <span>0.4g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="piston-nut" min="0" value="0">
-                            <label for="piston-nut">Piston Nut</label>
-                            <span>0.9g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="v2l-piston-nut" min="0" value="0">
-                            <label for="v2l-piston-nut">V2L Piston Nut</label>
-                            <span>1.6g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="nylon-hex-nut" min="0" value="0">
-                            <label for="nylon-hex-nut">Nylon Hex Nut</label>
-                            <span>0.1g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="nylon-nut" min="0" value="0">
-                            <label for="nylon-nut">Nylon Nut</label>
-                            <span>0.3g</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="component-category">
-                    <h2>Screws</h2>
-                    <div class="component-grid">
-                        <div class="component-item">
-                            <input type="number" id="nylon-screw" min="0" value="0">
-                            <label for="nylon-screw">Nylon Screw</label>
-                            <span>0.1g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-4-screw" min="0" value="0">
-                            <label for="1-4-screw">1/4" Screw</label>
-                            <span>0.1g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="3-8-screw" min="0" value="0">
-                            <label for="3-8-screw">3/8" Screw</label>
-                            <span>1.1g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-2-screw" min="0" value="0">
-                            <label for="1-2-screw">1/2" Screw</label>
-                            <span>1.3g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="5-8-screw" min="0" value="0">
-                            <label for="5-8-screw">5/8" Screw</label>
-                            <span>1.5g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="3-4-screw" min="0" value="0">
-                            <label for="3-4-screw">3/4" Screw</label>
-                            <span>1.8g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="7-8-screw" min="0" value="0">
-                            <label for="7-8-screw">7/8" Screw</label>
-                            <span>2.0g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-inch-screw" min="0" value="0">
-                            <label for="1-inch-screw">1" Screw</label>
-                            <span>2.3g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-25-screw" min="0" value="0">
-                            <label for="1-25-screw">1.25" Screw</label>
-                            <span>2.5g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-5-screw" min="0" value="0">
-                            <label for="1-5-screw">1.5" Screw</label>
-                            <span>3.0g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-75-screw" min="0" value="0">
-                            <label for="1-75-screw">1.75" Screw</label>
-                            <span>3.5g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="2-screw" min="0" value="0">
-                            <label for="2-screw">2" Screw</label>
-                            <span>4.0g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="2-25-screw" min="0" value="0">
-                            <label for="2-25-screw">2.25" Screw</label>
-                            <span>4.5g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="2-5-screw" min="0" value="0">
-                            <label for="2-5-screw">2.5" Screw</label>
-                            <span>5.0g</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="component-category">
-                    <h2>Standoffs</h2>
-                    <div class="component-grid">
-                        <div class="component-item">
-                            <input type="number" id="1-4-standoff" min="0" value="0">
-                            <label for="1-4-standoff">1/4" Standoff</label>
-                            <span>0.4g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-2-standoff" min="0" value="0">
-                            <label for="1-2-standoff">1/2" Standoff</label>
-                            <span>0.8g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="3-4-standoff" min="0" value="0">
-                            <label for="3-4-standoff">3/4" Standoff</label>
-                            <span>1.2g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="7-8-standoff" min="0" value="0">
-                            <label for="7-8-standoff">7/8" Standoff</label>
-                            <span>1.3g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-standoff" min="0" value="0">
-                            <label for="1-standoff">1" Standoff</label>
-                            <span>1.6g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="1-5-standoff" min="0" value="0">
-                            <label for="1-5-standoff">1.5" Standoff</label>
-                            <span>2.5g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="2-standoff" min="0" value="0">
-                            <label for="2-standoff">2" Standoff</label>
-                            <span>3.1g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="3-standoff" min="0" value="0">
-                            <label for="3-standoff">3" Standoff</label>
-                            <span>4.8g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="4-standoff" min="0" value="0">
-                            <label for="4-standoff">4" Standoff</label>
-                            <span>6.4g</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="component-category">
                     <h2>Electronics</h2>
                     <div class="component-grid">
@@ -372,11 +551,6 @@
                             <span>394g</span>
                         </div>
                         <div class="component-item">
-                            <input type="number" id="radio" min="0" value="0">
-                            <label for="radio">V5 Radio</label>
-                            <span>17g</span>
-                        </div>
-                        <div class="component-item">
                             <input type="number" id="v5-motor" min="0" value="0">
                             <label for="v5-motor">V5 Smart Motor</label>
                             <span>192g</span>
@@ -386,44 +560,9 @@
                             <label for="inertial">V5 Inertial Sensor</label>
                             <span>23g</span>
                         </div>
-                        <div class="component-item">
-                            <input type="number" id="distance" min="0" value="0">
-                            <label for="distance">V5 Distance Sensor</label>
-                            <span>19g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="optical" min="0" value="0">
-                            <label for="optical">V5 Optical Sensor</label>
-                            <span>22g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="gps" min="0" value="0">
-                            <label for="gps">V5 GPS Sensor</label>
-                            <span>47g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="rotation" min="0" value="0">
-                            <label for="rotation">V5 Rotation Sensor</label>
-                            <span>19g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="vision" min="0" value="0">
-                            <label for="vision">V5 Vision Sensor</label>
-                            <span>31g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="limit-switch" min="0" value="0">
-                            <label for="limit-switch">Limit Switch</label>
-                            <span>8g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="bumper-switch" min="0" value="0">
-                            <label for="bumper-switch">Bumper Switch</label>
-                            <span>8g</span>
-                        </div>
                     </div>
                 </div>
-
+                
                 <div class="component-category">
                     <h2>Drive & Motion</h2>
                     <div class="component-grid">
@@ -442,124 +581,6 @@
                             <label for="traction-wheel">4" Traction Wheel</label>
                             <span>95g</span>
                         </div>
-                        <div class="component-item">
-                            <input type="number" id="2-5-wheel" min="0" value="0">
-                            <label for="2-5-wheel">2.5" Wheel</label>
-                            <span>40g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="2-75-wheel" min="0" value="0">
-                            <label for="2-75-wheel">2.75" Wheel</label>
-                            <span>43g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="mesh-gear" min="0" value="0">
-                            <select id="mesh-gear-type">
-                                <option value="12">12T</option>
-                                <option value="24">24T</option>
-                                <option value="36">36T</option>
-                                <option value="48">48T</option>
-                                <option value="60">60T</option>
-                                <option value="72">72T</option>
-                                <option value="84">84T</option>
-                            </select>
-                            <label for="mesh-gear">Mesh Gear</label>
-                            <span id="mesh-gear-weight">5g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="high-strength-gear" min="0" value="0">
-                            <select id="hs-gear-type">
-                                <option value="12">12T</option>
-                                <option value="24">24T</option>
-                                <option value="36">36T</option>
-                                <option value="48">48T</option>
-                                <option value="60">60T</option>
-                                <option value="72">72T</option>
-                                <option value="84">84T</option>
-                            </select>
-                            <label for="high-strength-gear">High Strength Gear</label>
-                            <span id="hs-gear-weight">13g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="sprocket" min="0" value="0">
-                            <select id="sprocket-type">
-                                <option value="small">Small</option>
-                                <option value="medium">Medium</option>
-                                <option value="large">Large</option>
-                            </select>
-                            <label for="sprocket">Sprocket</label>
-                            <span id="sprocket-weight">9g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="bearing" min="0" value="0">
-                            <label for="bearing">Bearing</label>
-                            <span>1.3g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="bearing-flat" min="0" value="0">
-                            <label for="bearing-flat">Bearing Flat</label>
-                            <span>1.1g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="spacer" min="0" value="0">
-                            <label for="spacer">Spacer</label>
-                            <span>0.6g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="flex-wheel" min="0" value="0">
-                            <label for="flex-wheel">Flex Wheel</label>
-                            <span>42g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="chain-links" min="0" value="0">
-                            <label for="chain-links">Chain (per link)</label>
-                            <span>1.5g</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="component-category">
-                    <h2>Pneumatics</h2>
-                    <div class="component-grid">
-                        <div class="component-item">
-                            <input type="number" id="air-reservoir" min="0" value="0">
-                            <label for="air-reservoir">Air Reservoir</label>
-                            <span>77g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="compressor" min="0" value="0">
-                            <label for="compressor">Air Compressor</label>
-                            <span>91g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="double-cylinder" min="0" value="0">
-                            <label for="double-cylinder">Double-Acting Cylinder</label>
-                            <span>28g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="single-cylinder" min="0" value="0">
-                            <label for="single-cylinder">Single-Acting Cylinder</label>
-                            <span>20g</span>
-                        </div>
-                        <div class="component-item">
-                            <input type="number" id="solenoid" min="0" value="0">
-                            <label for="solenoid">Solenoid</label>
-                            <span>26g</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="component-category">
-                    <h2>3D Printed Parts</h2>
-                    <div class="component-grid">
-                        <div class="component-item" style="grid-column: 1 / -1;">
-                            <input type="number" id="pla-count" min="0" value="0">
-                            <label for="pla-count">PLA Parts (grams)</label>
-                            <span>1g/g</span>
-                            <div class="metal-config">
-                                <input type="number" id="pla-weight" min="1" value="20" step="1"> grams
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -567,20 +588,15 @@
             <div class="summary">
                 <div class="weight-box">
                     <h2>Total Weight</h2>
-                    <div class="weight" id="total-weight">0</div>
+                    <div class="weight" id="total-weight">0.0</div>
                     <div class="unit">grams</div>
-                </div>
-                
-                <div class="weight-box" style="background: var(--secondary);">
-                    <h2>Weight Limit</h2>
-                    <div class="weight">6803.9</div>
-                    <div class="unit">grams (15 lbs)</div>
                 </div>
                 
                 <div class="selected-items">
                     <h3>Selected Components</h3>
                     <ul id="selected-list">
-                        <!-- List will be populated by JavaScript -->
+                        <!-- Will be populated by JavaScript -->
+                        <li>No components selected</li>
                     </ul>
                 </div>
                 
@@ -588,4 +604,117 @@
             </div>
         </div>
     </div>
+    
+    <!-- Settings button -->
+    <button class="settings-button" id="settings-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+    </button>
+    
+    <!-- Settings popup -->
+    <div class="settings-popup" id="settings-popup">
+        <h3>Settings</h3>
+        
+        <div class="theme-option">
+            <div class="toggle-wrapper">
+                <h4>Dark Mode</h4>
+                <label class="toggle">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="theme-option">
+            <h4>Color Theme</h4>
+            <div class="color-options">
+                <div class="color-option color-red active" data-theme="default"></div>
+                <div class="color-option color-blue" data-theme="blue"></div>
+                <div class="color-option color-green" data-theme="green"></div>
+                <div class="color-option color-gold" data-theme="gold"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Toggle settings popup
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPopup = document.getElementById('settings-popup');
+        
+        settingsBtn.addEventListener('click', () => {
+            settingsPopup.classList.toggle('active');
+        });
+        
+        // Close popup when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!settingsPopup.contains(e.target) && e.target !== settingsBtn) {
+                settingsPopup.classList.remove('active');
+            }
+        });
+        
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.body.setAttribute('data-theme', 'dark');
+            } else {
+                // Restore the active color theme or default
+                const activeTheme = document.querySelector('.color-option.active').getAttribute('data-theme');
+                document.body.setAttribute('data-theme', activeTheme === 'default' ? 'default' : activeTheme);
+            }
+        });
+        
+        // Color theme selection
+        const colorOptions = document.querySelectorAll('.color-option');
+        
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove active class from all options
+                colorOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Add active class to clicked option
+                option.classList.add('active');
+                
+                // Apply theme if not in dark mode
+                const theme = option.getAttribute('data-theme');
+                if (!themeToggle.checked) {
+                    document.body.setAttribute('data-theme', theme);
+                }
+            });
+        });
+        
+        // Sample calculation function (simplified for demonstration)
+        function calculateWeight() {
+            // This would contain the actual calculations based on selected components
+            // For now, we'll just return a sample value
+            return 0.0;
+        }
+        
+        // Sample reset function
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            // Reset all input values to 0
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                input.value = 0;
+            });
+            
+            // Reset checkboxes
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.id !== 'theme-toggle') {
+                    checkbox.checked = false;
+                }
+            });
+            
+            // Update weight display
+            document.getElementById('total-weight').textContent = '0.0';
+            
+            // Clear selected list
+            document.getElementById('selected-list').innerHTML = '<li>No components selected</li>';
+        });
+    </script>
 </body>
+</html>

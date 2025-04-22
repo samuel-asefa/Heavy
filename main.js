@@ -91,7 +91,7 @@ const componentsData = {
     'solenoid': { name: 'Solenoid', weight: 26, unit: 'g' },
     
     // 3D Printed Parts
-    'pla-count': { name: 'PLA Parts', weight: 1, unit: 'g/g', configurable: true, weightId: 'pla-weight' }
+    'pla-count': { name: 'PLA Parts', weight: 1, unit: 'g/cm^3', configurable: true, weightId: 'pla-weight' }
 };
 
 // Gear weights data
