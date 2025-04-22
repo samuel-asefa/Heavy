@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heavy | VEX V5 Weight Calculator</title>
+
     <style>
         :root {
             --primary: #e84c3d;
@@ -637,84 +638,8 @@
             </div>
         </div>
     </div>
+    <script src="main.js" defer></script>
+
     
-    <script>
-        // Toggle settings popup
-        const settingsBtn = document.getElementById('settings-btn');
-        const settingsPopup = document.getElementById('settings-popup');
-        
-        settingsBtn.addEventListener('click', () => {
-            settingsPopup.classList.toggle('active');
-        });
-        
-        // Close popup when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!settingsPopup.contains(e.target) && e.target !== settingsBtn) {
-                settingsPopup.classList.remove('active');
-            }
-        });
-        
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        
-        themeToggle.addEventListener('change', () => {
-            if (themeToggle.checked) {
-                document.body.setAttribute('data-theme', 'dark');
-            } else {
-                // Restore the active color theme or default
-                const activeTheme = document.querySelector('.color-option.active').getAttribute('data-theme');
-                document.body.setAttribute('data-theme', activeTheme === 'default' ? 'default' : activeTheme);
-            }
-        });
-        
-        // Color theme selection
-        const colorOptions = document.querySelectorAll('.color-option');
-        
-        colorOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                // Remove active class from all options
-                colorOptions.forEach(opt => opt.classList.remove('active'));
-                
-                // Add active class to clicked option
-                option.classList.add('active');
-                
-                // Apply theme if not in dark mode
-                const theme = option.getAttribute('data-theme');
-                if (!themeToggle.checked) {
-                    document.body.setAttribute('data-theme', theme);
-                }
-            });
-        });
-        
-        // Sample calculation function (simplified for demonstration)
-        function calculateWeight() {
-            // This would contain the actual calculations based on selected components
-            // For now, we'll just return a sample value
-            return 0.0;
-        }
-        
-        // Sample reset function
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            // Reset all input values to 0
-            const inputs = document.querySelectorAll('input[type="number"]');
-            inputs.forEach(input => {
-                input.value = 0;
-            });
-            
-            // Reset checkboxes
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                if (checkbox.id !== 'theme-toggle') {
-                    checkbox.checked = false;
-                }
-            });
-            
-            // Update weight display
-            document.getElementById('total-weight').textContent = '0.0';
-            
-            // Clear selected list
-            document.getElementById('selected-list').innerHTML = '<li>No components selected</li>';
-        });
-    </script>
 </body>
 </html>

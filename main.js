@@ -121,34 +121,71 @@ const gearWeights = {
     }
 };
 
-// Update weight calculation when inputs change
-document.querySelectorAll('input[type="number"], input[type="checkbox"], select').forEach(input => {
-    input.addEventListener('change', calculateWeight);
-});
+// Theme data
+let currentColorTheme = 'default';
+let isDarkMode = false;
 
-// Update gear weights when selection changes
-document.getElementById('mesh-gear-type').addEventListener('change', updateGearWeight);
-document.getElementById('hs-gear-type').addEventListener('change', updateGearWeight);
-document.getElementById('sprocket-type').addEventListener('change', updateGearWeight);
+// Initialize the calculator when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Load saved theme preferences
+    loadThemePreferences();
 
-// Reset button
-document.getElementById('reset-btn').addEventListener('click', resetCalculator);
-
-// Theme toggle
-document.getElementById('theme-toggle').addEventListener('change', toggleDarkMode);
-
-// Color theme buttons
-document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const theme = btn.getAttribute('data-theme');
-        setColorTheme(theme);
+    // Add event listeners for input elements
+    document.querySelectorAll('input[type="number"], input[type="checkbox"], select').forEach(input => {
+        input.addEventListener('change', calculateWeight);
     });
+
+    // Add event listeners for gear type selectors
+    document.getElementById('mesh-gear-type')?.addEventListener('change', updateGearWeight);
+    document.getElementById('hs-gear-type')?.addEventListener('change', updateGearWeight);
+    document.getElementById('sprocket-type')?.addEventListener('change', updateGearWeight);
+
+    // Reset button event listener
+    document.getElementById('reset-btn').addEventListener('click', resetCalculator);
+
+    // Theme toggle event listener
+    document.getElementById('theme-toggle').addEventListener('change', toggleDarkMode);
+
+    // Settings button event listener
+    document.getElementById('settings-btn').addEventListener('click', () => {
+        document.getElementById('settings-popup').classList.toggle('active');
+    });
+
+    // Click outside settings popup to close
+    document.addEventListener('click', (e) => {
+        const settingsPopup = document.getElementById('settings-popup');
+        const settingsBtn = document.getElementById('settings-btn');
+        if (settingsPopup && settingsBtn && !settingsPopup.contains(e.target) && e.target !== settingsBtn) {
+            settingsPopup.classList.remove('active');
+        }
+    });
+
+    // Color theme buttons
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.addEventListener('click', () => {
+            // Remove active class from all options
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            
+            // Add active class to clicked option
+            option.classList.add('active');
+            
+            // Update current color theme
+            currentColorTheme = option.getAttribute('data-theme');
+            
+            // Apply theme
+            applyTheme();
+            
+            // Save preferences
+            saveThemePreferences();
+        });
+    });
+
+    // Initialize the calculator
+    updateGearWeight();
+    calculateWeight();
 });
 
-// Initialize calculator
-calculateWeight();
-
-// Calculate total weight
+// Calculate total weight of all components
 function calculateWeight() {
     let totalWeight = 0;
     const selectedItems = [];
@@ -156,7 +193,7 @@ function calculateWeight() {
     // Loop through all components
     for (const [id, data] of Object.entries(componentsData)) {
         const countInput = document.getElementById(id);
-        const count = parseInt(countInput.value) || 0;
+        const count = parseInt(countInput?.value) || 0;
         
         if (count > 0) {
             let itemWeight = 0;
@@ -167,7 +204,7 @@ function calculateWeight() {
                 // Weight based on length
                 if (data.lengthId) {
                     const lengthInput = document.getElementById(data.lengthId);
-                    const length = parseFloat(lengthInput.value) || 0;
+                    const length = parseFloat(lengthInput?.value) || 0;
                     const isHalf = data.halfId ? document.getElementById(data.halfId).checked : false;
                     
                     const effectiveLength = isHalf ? length / 2 : length;
@@ -178,15 +215,19 @@ function calculateWeight() {
                 // Weight based on selected type (gears, sprockets)
                 else if (data.typeId) {
                     const typeSelect = document.getElementById(data.typeId);
-                    const selectedType = typeSelect.value;
+                    const selectedType = typeSelect?.value;
                     
-                    itemWeight = gearWeights[id][selectedType];
-                    itemDescription += ` (${typeSelect.options[typeSelect.selectedIndex].text})`;
+                    if (selectedType && gearWeights[id] && gearWeights[id][selectedType]) {
+                        itemWeight = gearWeights[id][selectedType];
+                        itemDescription += ` (${typeSelect.options[typeSelect.selectedIndex].text})`;
+                    } else {
+                        itemWeight = data.weight; // Fallback to default weight
+                    }
                 }
                 // Weight for 3D printed parts
                 else if (data.weightId) {
                     const weightInput = document.getElementById(data.weightId);
-                    const partWeight = parseFloat(weightInput.value) || 0;
+                    const partWeight = parseFloat(weightInput?.value) || 0;
                     
                     itemWeight = data.weight * partWeight;
                     itemDescription += ` (${partWeight}g)`;
@@ -210,22 +251,27 @@ function calculateWeight() {
     }
     
     // Update UI
-    document.getElementById('total-weight').textContent = totalWeight.toFixed(1);
+    const weightElement = document.getElementById('total-weight');
+    if (weightElement) {
+        weightElement.textContent = totalWeight.toFixed(1);
+        
+        // Update weight color based on limit
+        if (totalWeight > 6803.9) {
+            weightElement.style.color = 'red';
+        } else {
+            weightElement.style.color = '';
+        }
+    }
     
     // Update selected items list
     updateSelectedList(selectedItems);
-    
-    // Update weight color based on limit
-    const weightElement = document.getElementById('total-weight');
-    if (totalWeight > 6803.9) {
-        weightElement.style.color = 'red';
-    } else {
-        weightElement.style.color = '';
-    }
 }
 
+// Update the selected items list in the UI
 function updateSelectedList(items) {
     const listElement = document.getElementById('selected-list');
+    if (!listElement) return;
+    
     listElement.innerHTML = '';
     
     // Sort items by weight (heaviest first)
@@ -255,34 +301,43 @@ function updateSelectedList(items) {
     });
 }
 
+// Update gear weights based on selected types
 function updateGearWeight() {
     // Update mesh gear weight display
-    const meshGearType = document.getElementById('mesh-gear-type').value;
-    document.getElementById('mesh-gear-weight').textContent = `${gearWeights['mesh-gear'][meshGearType]}g`;
+    const meshGearType = document.getElementById('mesh-gear-type')?.value;
+    const meshGearWeight = document.getElementById('mesh-gear-weight');
+    if (meshGearWeight && meshGearType && gearWeights['mesh-gear'][meshGearType]) {
+        meshGearWeight.textContent = `${gearWeights['mesh-gear'][meshGearType]}g`;
+    }
     
     // Update high strength gear weight display
-    const hsGearType = document.getElementById('hs-gear-type').value;
-    document.getElementById('hs-gear-weight').textContent = `${gearWeights['high-strength-gear'][hsGearType]}g`;
+    const hsGearType = document.getElementById('hs-gear-type')?.value;
+    const hsGearWeight = document.getElementById('hs-gear-weight');
+    if (hsGearWeight && hsGearType && gearWeights['high-strength-gear'][hsGearType]) {
+        hsGearWeight.textContent = `${gearWeights['high-strength-gear'][hsGearType]}g`;
+    }
     
     // Update sprocket weight display
-    const sprocketType = document.getElementById('sprocket-type').value;
-    document.getElementById('sprocket-weight').textContent = `${gearWeights['sprocket'][sprocketType]}g`;
+    const sprocketType = document.getElementById('sprocket-type')?.value;
+    const sprocketWeight = document.getElementById('sprocket-weight');
+    if (sprocketWeight && sprocketType && gearWeights['sprocket'][sprocketType]) {
+        sprocketWeight.textContent = `${gearWeights['sprocket'][sprocketType]}g`;
+    }
     
     // Recalculate total weight
     calculateWeight();
 }
 
+// Reset calculator to initial state
 function resetCalculator() {
-    // Reset all number inputs to 0
+    // Reset all number inputs to 0 except length and weight inputs
     document.querySelectorAll('input[type="number"]').forEach(input => {
-        if (input.id.includes('length') || input.id.includes('weight')) {
-            // Don't reset length or weight inputs
-        } else {
+        if (!input.id.includes('length') && !input.id.includes('weight')) {
             input.value = 0;
         }
     });
     
-    // Reset all checkboxes
+    // Reset all checkboxes except theme toggle
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         if (checkbox.id !== 'theme-toggle') {
             checkbox.checked = false;
@@ -294,19 +349,64 @@ function resetCalculator() {
         select.selectedIndex = 0;
     });
     
-    // Update gear weights
+    // Update gear weights with new selection
     updateGearWeight();
     
-    // Recalculate
+    // Recalculate total weight
     calculateWeight();
 }
 
+// Toggle dark mode
 function toggleDarkMode() {
-    const isDark = document.getElementById('theme-toggle').checked;
-    document.body.setAttribute('data-theme', isDark ? 'dark' : document.body.getAttribute('data-theme').replace('dark', 'default'));
+    isDarkMode = document.getElementById('theme-toggle')?.checked || false;
+    applyTheme();
+    saveThemePreferences();
 }
 
-function setColorTheme(theme) {
-    const isDark = document.getElementById('theme-toggle').checked;
-    document.body.setAttribute('data-theme', isDark ? 'dark' : theme);
+// Apply the current theme
+function applyTheme() {
+    if (isDarkMode) {
+        document.body.setAttribute('data-theme', 'dark');
+    } else {
+        document.body.setAttribute('data-theme', currentColorTheme);
+    }
+}
+
+// Save theme preferences to localStorage
+function saveThemePreferences() {
+    localStorage.setItem('heavyCalcTheme', JSON.stringify({
+        darkMode: isDarkMode,
+        colorTheme: currentColorTheme
+    }));
+}
+
+// Load theme preferences from localStorage
+function loadThemePreferences() {
+    try {
+        const savedPrefs = JSON.parse(localStorage.getItem('heavyCalcTheme'));
+        if (savedPrefs) {
+            isDarkMode = savedPrefs.darkMode;
+            currentColorTheme = savedPrefs.colorTheme || 'default';
+            
+            // Update UI to match saved preferences
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.checked = isDarkMode;
+            }
+            
+            // Update active color option
+            document.querySelectorAll('.color-option').forEach(option => {
+                if (option.getAttribute('data-theme') === currentColorTheme) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+            
+            // Apply theme
+            applyTheme();
+        }
+    } catch (error) {
+        console.error('Error loading theme preferences:', error);
+    }
 }
